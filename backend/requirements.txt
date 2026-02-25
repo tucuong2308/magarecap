@@ -1,0 +1,4 @@
+moviepy
+gTTS
+pyttsx3
+google-genai
