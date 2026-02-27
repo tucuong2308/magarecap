@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import "./home.css";
+import "./MangaEditor\.css";
 import {
   Save,
   FileText,
@@ -67,6 +67,37 @@ const MangaEditor: React.FC<MangaEditorProps> = (props) => {
     }
   });
   const [selectedRow, setSelectedRow] = useState<number | null>(2);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  // Fetch data from backend
+  useEffect(() => {
+    fetch("http://localhost:5000/rows")
+      .then((res) => res.json())
+      .then((data) => {
+        // Map backend snake_case to frontend camelCase
+        const mappedData = data.map(
+          (row: {
+            id: number;
+            media_path: string;
+            text: string;
+            translation: string;
+          }) => ({
+            id: row.id,
+            mediaPath: row.media_path || "",
+            text: row.text || "",
+            translation: row.translation || "",
+          }),
+        );
+        if (mappedData.length > 0) {
+          setRows(mappedData);
+        }
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error("Error fetching rows:", error);
+        setLoading(false);
+      });
+  }, []);
 
   useEffect(() => {
     if (props.initialRows) {
@@ -175,54 +206,72 @@ const MangaEditor: React.FC<MangaEditorProps> = (props) => {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((row) => (
-                  <tr
-                    key={row.id}
-                    onClick={() => setSelectedRow(row.id)}
-                    className={`manga-editor-row ${selectedRow === row.id ? "manga-editor-row-selected" : "manga-editor-row-hover"}`}
-                  >
-                    <td className="manga-editor-td-index">{row.id}</td>
-                    <td className="manga-editor-td-media">
-                      <input
-                        type="text"
-                        className="manga-editor-cell-input"
-                        value={row.mediaPath}
-                        onChange={(e) =>
-                          handleCellChange(row.id, "mediaPath", e.target.value)
-                        }
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    </td>
-                    <td
-                      className={`manga-editor-td-text ${selectedRow === row.id ? "manga-editor-td-text-selected" : ""}`}
-                    >
-                      <input
-                        type="text"
-                        className="manga-editor-cell-input"
-                        value={row.text}
-                        onChange={(e) =>
-                          handleCellChange(row.id, "text", e.target.value)
-                        }
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    </td>
-                    <td className="manga-editor-td-translation">
-                      <input
-                        type="text"
-                        className="manga-editor-cell-input"
-                        value={row.translation}
-                        onChange={(e) =>
-                          handleCellChange(
-                            row.id,
-                            "translation",
-                            e.target.value,
-                          )
-                        }
-                        onClick={(e) => e.stopPropagation()}
-                      />
+                {loading ? (
+                  <tr>
+                    <td colSpan={4} className="text-center py-4 text-gray-400">
+                      Loading data from server...
                     </td>
                   </tr>
-                ))}
+                ) : rows.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="text-center py-4 text-gray-400">
+                      No data available
+                    </td>
+                  </tr>
+                ) : (
+                  rows.map((row) => (
+                    <tr
+                      key={row.id}
+                      onClick={() => setSelectedRow(row.id)}
+                      className={`manga-editor-row ${selectedRow === row.id ? "manga-editor-row-selected" : "manga-editor-row-hover"}`}
+                    >
+                      <td className="manga-editor-td-index">{row.id}</td>
+                      <td className="manga-editor-td-media">
+                        <input
+                          type="text"
+                          className="manga-editor-cell-input"
+                          value={row.mediaPath}
+                          onChange={(e) =>
+                            handleCellChange(
+                              row.id,
+                              "mediaPath",
+                              e.target.value,
+                            )
+                          }
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </td>
+                      <td
+                        className={`manga-editor-td-text ${selectedRow === row.id ? "manga-editor-td-text-selected" : ""}`}
+                      >
+                        <input
+                          type="text"
+                          className="manga-editor-cell-input"
+                          value={row.text}
+                          onChange={(e) =>
+                            handleCellChange(row.id, "text", e.target.value)
+                          }
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </td>
+                      <td className="manga-editor-td-translation">
+                        <input
+                          type="text"
+                          className="manga-editor-cell-input"
+                          value={row.translation}
+                          onChange={(e) =>
+                            handleCellChange(
+                              row.id,
+                              "translation",
+                              e.target.value,
+                            )
+                          }
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

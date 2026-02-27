@@ -1,13 +1,7 @@
 import "./App.css";
-import MangaEditor from "./component/home";
+import MangaEditor from "./component/MangaEditor";
 
 function App() {
-  useEffect(() => {
-    fetch("http://localhost:5000/rows")
-      .then((res) => res.json())
-      .then((data) => setRows(data));
-  }, []);
-
   return (
     <div className="app">
       <MangaEditor />
